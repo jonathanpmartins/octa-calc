@@ -45,9 +45,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import { Plugins } from '@capacitor/core';
-
-const { BluetoothSerial } = Plugins;
+import { BleClient } from '@capacitor-community/bluetooth-le';
 
 export default defineComponent({
   name: 'IndexPage',
@@ -65,101 +63,121 @@ export default defineComponent({
   },
   methods: {
     async setup() {
-      await this.doEnable();
 
-      await this.scanAndSetList();
-
-      setInterval(async () => {
-        await this.scanAndSetList();
-      }, 2000);
-    },
-    async doEnable() {
-      let isEnabled = await this.isEnabled();
-      if (!isEnabled) {
-        isEnabled = await this.enable();
-      }
-      this.enabled = isEnabled;
-    },
-    async enable() {
-      return new Promise((resolve, reject) => {
-        BluetoothSerial.enable().then((response) => {
-          resolve(!!response.enabled);
-        }).catch((error) => {
-          reject(error);
-        });
-      });
-    },
-    async isEnabled() {
-      return new Promise((resolve, reject) => {
-        BluetoothSerial.isEnabled().then((response) => {
-          resolve(!!response.enabled);
-        }).catch((error) => {
-          reject(error);
-        });
-      });
-    },
-    async scan() {
-      return new Promise((resolve, reject) => {
-        BluetoothSerial.scan().then((result) => {
-          resolve(result.devices);
-        }).catch((error) => {
-          reject(error);
-        });
-      });
-    },
-    async scanAndSetList() {
-      if (!this.enabled || this.connected) {
-        // console.warn('Is not enabled! dont scan!');
-        return;
-      }
       try {
-        const data = [];
-        const list = await this.scan();
-        console.log('list', list);
-        list.forEach((device) => data.push(device));
-        this.list = data;
-      } catch (e) {
-        console.log('e', e);
-        if ((`${e}`).includes('desabilitado')) {
-          this.enabled = false;
-          this.list = [];
-        }
-      }
-    },
-    async connectTo(item) {
-      try {
-        await this.connect(item.address);
-        this.connected = true;
-        this.address = item.address;
-        console.log('--------------- connected!!!');
+        await BleClient.initialize();
 
-        BluetoothSerial.enableNotifications({
-          address: '00:11:22:33:44:55',
-          delimiter: '\n',
-        }).then((result) => {
-          console.warn('result', result);
-          console.warn('result.eventName', result.eventName);
-          BluetoothSerial.addListener(result.eventName, (payload) => {
-            console.warn('payload', payload);
-            console.warn('payload.data', payload.data);
-            console.warn('payload.data.value', payload.data.value);
-          });
-        }).catch(() => {
-          console.log('Error enabling listener for device');
-        });
-      } catch (e) {
-        console.log('e', e);
+        await BleClient.requestLEScan(
+          {},
+          result => {
+            console.log('received new scan result', result);
+          },
+        );
+
+        setTimeout(async () => {
+          await BleClient.stopLEScan();
+          console.log('stopped scanning');
+        }, 10000);
+      } catch (error) {
+        console.error(error);
       }
+
+
+      // await this.doEnable();
+      //
+      // await this.scanAndSetList();
+      //
+      // setInterval(async () => {
+      //   await this.scanAndSetList();
+      // }, 2000);
     },
-    async connect(address) {
-      return new Promise((resolve, reject) => {
-        BluetoothSerial.connect({ address }).then(() => {
-          resolve();
-        }).catch(() => {
-          reject();
-        });
-      });
-    },
+    // async doEnable() {
+    //   let isEnabled = await this.isEnabled();
+    //   if (!isEnabled) {
+    //     isEnabled = await this.enable();
+    //   }
+    //   this.enabled = isEnabled;
+    // },
+    // async enable() {
+    //   return new Promise((resolve, reject) => {
+    //     BluetoothSerial.enable().then((response) => {
+    //       resolve(!!response.enabled);
+    //     }).catch((error) => {
+    //       reject(error);
+    //     });
+    //   });
+    // },
+    // async isEnabled() {
+    //   return new Promise((resolve, reject) => {
+    //     BluetoothSerial.isEnabled().then((response) => {
+    //       resolve(!!response.enabled);
+    //     }).catch((error) => {
+    //       reject(error);
+    //     });
+    //   });
+    // },
+    // async scan() {
+    //   return new Promise((resolve, reject) => {
+    //     BluetoothSerial.scan().then((result) => {
+    //       resolve(result.devices);
+    //     }).catch((error) => {
+    //       reject(error);
+    //     });
+    //   });
+    // },
+    // async scanAndSetList() {
+    //   if (!this.enabled || this.connected) {
+    //     // console.warn('Is not enabled! dont scan!');
+    //     return;
+    //   }
+    //   try {
+    //     const data = [];
+    //     const list = await this.scan();
+    //     console.log('list', list);
+    //     list.forEach((device) => data.push(device));
+    //     this.list = data;
+    //   } catch (e) {
+    //     console.log('e', e);
+    //     if ((`${e}`).includes('desabilitado')) {
+    //       this.enabled = false;
+    //       this.list = [];
+    //     }
+    //   }
+    // },
+    // async connectTo(item) {
+    //   try {
+    //     await this.connect(item.address);
+    //     this.connected = true;
+    //     this.address = item.address;
+    //     console.log('--------------- connected!!!');
+    //
+    //     BluetoothSerial.enableNotifications({
+    //       address: '00:11:22:33:44:55',
+    //       delimiter: '\n',
+    //     }).then((result) => {
+    //       console.warn('result', result);
+    //       console.warn('result.eventName', result.eventName);
+    //       BluetoothSerial.addListener(result.eventName, (payload) => {
+    //         console.warn('payload', payload);
+    //         console.warn('payload.data', payload.data);
+    //         console.warn('payload.data.value', payload.data.value);
+    //       });
+    //     }).catch(() => {
+    //       console.log('Error enabling listener for device');
+    //     });
+    //   } catch (e) {
+    //     console.log('e', e);
+    //   }
+    // },
+    // async connect(address) {
+    //   return new Promise((resolve, reject) => {
+    //     BluetoothSerial.connect({ address }).then(() => {
+    //       resolve();
+    //     }).catch(() => {
+    //       reject();
+    //     });
+    //   });
+    // },
   },
 });
 </script>

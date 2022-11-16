@@ -4,7 +4,14 @@
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www",
-  "server": {
-    "url": "http://192.168.1.8:9500"
+  "plugins": {
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Scanning...",
+        "cancel": "Cancel",
+        "availableDevices": "Available devices",
+        "noDeviceFound": "No device found"
+      }
+    }
   }
 }
